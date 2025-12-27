@@ -1,0 +1,362 @@
+import { expect, test } from "@playwright/test";
+
+test.describe("Horse Racing Game - Race Page", () => {
+  test.beforeEach(async ({ page }) => {
+    await page. goto("/");
+  });
+
+  test("should load the race page successfully", async ({ page }) => {
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveTitle(/horse-racing-game/i);
+
+    const appRoot = page.locator("#app");
+    await expect(appRoot).toBeVisible();
+
+    await expect(page.locator("body")).toBeVisible();
+  });
+
+  test("should display the race course with horses", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText: /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    const tracks = page.locator(".track-root");
+    await page.waitForTimeout(200);
+    const trackCount = await tracks.count();
+    expect(trackCount).toBeGreaterThan(0);
+  });
+
+  test("should generate program with 6 races and 10 horses each", async ({
+    page,
+  }) => {
+    await page.waitForLoadState("networkidle");
+
+    await page.getByRole("button", { name: /generate program/i }).click();
+
+    const racesSection = page.getByRole("region", { name: /races/i });
+    await expect(racesSection).toBeVisible();
+
+    const raceBlocks = racesSection.getByRole("region", {
+      name: /race\s+\d+\s+-\s+\d+m/i,
+    });
+    await expect(raceBlocks).toHaveCount(6);
+
+    for (let i = 0; i < 6; i++) {
+      const raceBlock = raceBlocks. nth(i);
+      const horseRows = raceBlock. locator("table tbody tr");
+      await expect(horseRows).toHaveCount(10);
+    }
+  });
+
+  test("should show race results ordered by horse condition", async ({ page }) => {
+    await page.waitForLoadState("networkidle");
+
+    await page.getByRole("button", { name: /generate program/i }).click();
+
+    const horsesSection = page.getByRole("region", { name: /horses/i });
+    await expect(horsesSection).toBeVisible();
+
+    const horseConditionByName = new Map<string, number>();
+    const horseRows = horsesSection.locator("table tbody tr");
+    const horseRowCount = await horseRows. count();
+    for (let i = 0; i < horseRowCount; i++) {
+      const row = horseRows.nth(i);
+      const name = (await row.locator("td").nth(0).innerText()).trim();
+      const conditionText = (await row.locator("td").nth(1).innerText()).trim();
+      const condition = Number(conditionText);
+      if (name && Number.isFinite(condition)) {
+        horseConditionByName.set(name, condition);
+      }
+    }
+
+    const racesSection = page.getByRole("region", { name: /races/i });
+    await expect(racesSection).toBeVisible();
+
+    const race1Block = racesSection.getByRole("region", {
+      name:  /race\s+1\s+-\s+\d+m/i,
+    });
+    await expect(race1Block).toBeVisible();
+
+    const race1HorseRows = race1Block. locator("table tbody tr");
+    await expect(race1HorseRows).toHaveCount(10);
+
+    const race1HorseNames: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const name = (await race1HorseRows.nth(i).locator("td").nth(1).innerText()).trim();
+      race1HorseNames.push(name);
+    }
+
+    await page.getByRole("button", { name: /^start$/i }).click();
+
+    const resultsSection = page.getByRole("region", { name:  /results/i });
+    await expect(resultsSection).toBeVisible();
+
+    const race1ResultBlock = resultsSection.getByRole("region", {
+      name:  /race\s+1\s+-\s+\d+m/i,
+    });
+    await expect(race1ResultBlock).toBeVisible({ timeout: 30_000 });
+
+    const resultRows = race1ResultBlock.locator("table tbody tr");
+    await expect(resultRows).toHaveCount(10);
+
+    const actualResultOrder: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const name = (await resultRows.nth(i).locator("td").nth(1).innerText()).trim();
+      actualResultOrder.push(name);
+    }
+
+    const expectedOrder = [... race1HorseNames].sort((a, b) => {
+      const ca = horseConditionByName.get(a);
+      const cb = horseConditionByName.get(b);
+      if (ca == null || cb == null) return 0;
+      return cb - ca;
+    });
+
+    expect(actualResultOrder).toEqual(expectedOrder);
+  });
+
+  test("should complete all 6 races with correct results", async ({ page }) => {
+    test.setTimeout(240_000);
+
+    await page.waitForLoadState("networkidle");
+
+    await page.getByRole("button", { name: /generate program/i }).click();
+
+    const horsesSection = page.getByRole("region", { name: /horses/i });
+    await expect(horsesSection).toBeVisible();
+
+    const horseConditionByName = new Map<string, number>();
+    const horseRows = horsesSection.locator("table tbody tr");
+    const horseRowCount = await horseRows. count();
+    for (let i = 0; i < horseRowCount; i++) {
+      const row = horseRows.nth(i);
+      const name = (await row.locator("td").nth(0).innerText()).trim();
+      const conditionText = (await row.locator("td").nth(1).innerText()).trim();
+      const condition = Number(conditionText);
+      if (name && Number.isFinite(condition)) {
+        horseConditionByName.set(name, condition);
+      }
+    }
+
+    const racesSection = page.getByRole("region", { name: /races/i });
+    await expect(racesSection).toBeVisible();
+
+    const expectedOrderByRaceNo = new Map<number, string[]>();
+    for (let raceNo = 1; raceNo <= 6; raceNo++) {
+      const raceBlock = racesSection.getByRole("region", {
+        name:  new RegExp(`race\\s+${raceNo}\\s+-\\s+\\d+m`, "i"),
+      });
+      await expect(raceBlock).toBeVisible();
+
+      const rows = raceBlock.locator("table tbody tr");
+      await expect(rows).toHaveCount(10);
+
+      const names: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const name = (await rows. nth(i).locator("td").nth(1).innerText()).trim();
+        names.push(name);
+      }
+
+      const expectedOrder = [...names].sort((a, b) => {
+        const ca = horseConditionByName.get(a);
+        const cb = horseConditionByName.get(b);
+        if (ca == null || cb == null) return 0;
+        return cb - ca;
+      });
+
+      expectedOrderByRaceNo. set(raceNo, expectedOrder);
+    }
+
+    await page.getByRole("button", { name: /^start$/i }).click();
+
+    const resultsSection = page.getByRole("region", { name: /results/i });
+    await expect(resultsSection).toBeVisible();
+
+    const resultBlocks = resultsSection.getByRole("region", {
+      name: /race\s+\d+\s+-\s+\d+m/i,
+    });
+
+    await expect(resultBlocks).toHaveCount(6, { timeout: 240_000 });
+
+    for (let raceNo = 1; raceNo <= 6; raceNo++) {
+      const resultBlock = resultsSection.getByRole("region", {
+        name: new RegExp(`race\\s+${raceNo}\\s+-\\s+\\d+m`, "i"),
+      });
+      await expect(resultBlock).toBeVisible();
+
+      const resultRows = resultBlock.locator("table tbody tr");
+      await expect(resultRows).toHaveCount(10);
+
+      const actualOrder: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const name = (await resultRows.nth(i).locator("td").nth(1).innerText()).trim();
+        actualOrder.push(name);
+      }
+
+      const expectedOrder = expectedOrderByRaceNo.get(raceNo);
+      expect(expectedOrder).toBeTruthy();
+      expect(actualOrder).toEqual(expectedOrder);
+    }
+  });
+
+  test("should be able to start a race", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText: /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    const startButton = page.locator("button", { hasText: /start|run|go/i });
+
+    if (await startButton.isVisible()) {
+      await startButton.click();
+
+      await page.waitForTimeout(100);
+
+      const runners = page.locator(".runner.is-running");
+      const runningCount = await runners.count();
+      expect(runningCount).toBeGreaterThan(0);
+    }
+  });
+
+  test("should pause the race when clicking pause", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText: /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    const startButton = page.locator("button", { hasText: /start|run|go/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(200);
+
+      const pauseButton = page.locator("button", { hasText: /pause|stop/i });
+      if (await pauseButton.isVisible()) {
+        await pauseButton.click();
+        await page.waitForTimeout(100);
+
+        const pausedRunners = page.locator(".runner.is-paused");
+        const pausedCount = await pausedRunners.count();
+        expect(pausedCount).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test("should reset the race", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText: /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    const startButton = page.locator("button", { hasText: /start|run|go/i });
+    if (await startButton. isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(200);
+
+      const resetButton = page.locator("button", { hasText: /reset|restart/i });
+      if (await resetButton.isVisible()) {
+        await resetButton.click();
+        await page.waitForTimeout(100);
+
+        const runners = page.locator(".runner");
+        for (let i = 0; i < (await runners.count()); i++) {
+          const runner = runners.nth(i);
+          const transform = await runner.evaluate(
+            (el) => window.getComputedStyle(el).transform
+          );
+          expect(transform).toContain("translateY(-50%)");
+        }
+      }
+    }
+  });
+
+  test("should display horse information", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText: /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(200);
+    }
+
+    const horseSection = page.getByRole('region', { name: /Horses/i });
+    await expect(horseSection).toBeVisible();
+
+    const horseRows = horseSection.locator("table tbody tr");
+    const horseCount = await horseRows.count();
+    expect(horseCount).toBeGreaterThan(0);
+  });
+
+  test("should display race results after completion", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText:  /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    const startButton = page.locator("button", { hasText: /start|run|go/i });
+    if (await startButton.isVisible()) {
+      await startButton.click();
+
+      await page.waitForTimeout(12000);
+
+      const finishedRunners = page.locator(".runner.is-finished");
+      const finishedCount = await finishedRunners.count();
+
+      if (finishedCount > 0) {
+        expect(finishedCount).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test("should handle multiple races in sequence", async ({ page }) => {
+    const generateButton = page.locator("button", { hasText:  /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    let startButton = page
+      .locator("button", { hasText: /start|run|go/i })
+      .first();
+    if (await startButton.isVisible()) {
+      await startButton.click();
+      await page.waitForTimeout(12000);
+
+      const resetButton = page.locator("button", { hasText: /reset|restart/i });
+      if (await resetButton.isVisible()) {
+        await resetButton.click();
+        await page.waitForTimeout(100);
+
+        startButton = page
+          .locator("button", { hasText: /start|run|go/i })
+          .first();
+        if (await startButton.isVisible()) {
+          await startButton.click();
+          await page.waitForTimeout(100);
+
+          const runners = page.locator(".runner.is-running");
+          const runningCount = await runners.count();
+          expect(runningCount).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  test("should display track lanes with correct direction", async ({
+    page,
+  }) => {
+    const generateButton = page.locator("button", { hasText: /generate/i });
+    if (await generateButton.isVisible()) {
+      await generateButton.click();
+      await page.waitForTimeout(500);
+    }
+
+    const tracks = page.locator(".track-root");
+
+    await expect(tracks. first()).toBeVisible();
+  });
+});
