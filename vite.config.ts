@@ -1,7 +1,8 @@
+import * as path from "node:path";
+
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import { fileURLToPath } from "node:url";
-import path from "node:path";
 import { playwright } from "@vitest/browser-playwright";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import vue from "@vitejs/plugin-vue";
@@ -13,15 +14,22 @@ const dirname =
 
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   test: {
     projects: [
       {
         extends: true,
+
         test: {
           name: "unit",
           environment: "jsdom",
           globals: true,
           include: ["src/**/*.spec.ts"],
+          setupFiles: ["./vitest.setup.ts"],
         },
       },
 

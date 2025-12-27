@@ -8,4 +8,18 @@
   --radius-md: 10px;
   --space-sm: 8px;
   --space-md: 16px;
+  --color-thunder: #2d6cdf;
+  --color-blaze: #ff8a00;
+  --color-mint: #00c48c;
+  --color-violet: #b455ff;
+  --color-danger: #ff3b30;
+  --color-border: #dcdcdc;
+  --color-shadow: rgba(0, 0, 0, 0.7);
+  --horse-won-shadow-1: rgba(255, 215, 0, 0.3);
+  --horse-won-shadow-2: rgba(255, 215, 0, 0.8);
+  --horse-won-shadow-3: rgba(255, 215, 0, 0.3);
+  --table-border-color: rgba(0, 0, 0, 0.15);
+  --table-header-back-color: rgba(0, 0, 0, 0.05);
+  --table-cell-hover-color: rgba(0, 0, 0, 0.04);
+  --grass-color: #228b22;
 }
