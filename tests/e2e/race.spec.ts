@@ -1,6 +1,27 @@
 import { DEFAULT_RACE_COUNT, HORSES_PER_RACE } from "../../src/store/modules/race/race.constants";
 import { expect, test } from "@playwright/test";
 
+async function clickGenerate(page: import("@playwright/test").Page) {
+  const btn = page.getByRole("button", { name: /generate/i });
+  await expect(btn).toBeVisible();
+  await expect(btn).toBeEnabled();
+  await btn.click();
+}
+
+async function clickStart(page: import("@playwright/test").Page) {
+  const btn = page.getByRole("button", { name: /^start$/i });
+  await expect(btn).toBeVisible();
+  await expect(btn).toBeEnabled();
+  await btn.click();
+}
+
+async function clickReset(page: import("@playwright/test").Page) {
+  const btn = page.getByRole("button", { name: /reset/i });
+  await expect(btn).toBeVisible();
+  await expect(btn).toBeEnabled();
+  await btn.click();
+}
+
 test.describe("Horse Racing Game - Race Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -30,12 +51,12 @@ test.describe("Horse Racing Game - Race Page", () => {
     expect(trackCount).toBeGreaterThan(0);
   });
 
-  test(`should generate program with ${DEFAULT_RACE_COUNT} races and ${HORSES_PER_RACE} horses each`, async ({
+  test(`should generate races with ${DEFAULT_RACE_COUNT} races and ${HORSES_PER_RACE} horses each`, async ({
     page,
   }) => {
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: /generate program/i }).click();
+    await clickGenerate(page);
 
     const racesSection = page.getByRole("region", { name: /races/i });
     await expect(racesSection).toBeVisible();
@@ -55,7 +76,7 @@ test.describe("Horse Racing Game - Race Page", () => {
   test("should show race results ordered by horse condition", async ({ page }) => {
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: /generate program/i }).click();
+    await clickGenerate(page);
 
     const horsesSection = page.getByRole("region", { name: /horses/i });
     await expect(horsesSection).toBeVisible();
@@ -90,7 +111,7 @@ test.describe("Horse Racing Game - Race Page", () => {
       race1HorseNames.push(name);
     }
 
-    await page.getByRole("button", { name: /^start$/i }).click();
+    await clickStart(page);
 
     const resultsSection = page.getByRole("region", { name: /results/i });
     await expect(resultsSection).toBeVisible();
@@ -124,7 +145,7 @@ test.describe("Horse Racing Game - Race Page", () => {
 
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: /generate program/i }).click();
+    await clickGenerate(page);
 
     const horsesSection = page.getByRole("region", { name: /horses/i });
     await expect(horsesSection).toBeVisible();
@@ -171,7 +192,7 @@ test.describe("Horse Racing Game - Race Page", () => {
       expectedOrderByRaceNo.set(raceNo, expectedOrder);
     }
 
-    await page.getByRole("button", { name: /^start$/i }).click();
+    await clickStart(page);
 
     const resultsSection = page.getByRole("region", { name: /results/i });
     await expect(resultsSection).toBeVisible();
@@ -247,31 +268,32 @@ test.describe("Horse Racing Game - Race Page", () => {
     }
   });
 
-  test("should reset the race", async ({ page }) => {
-    const generateButton = page.locator("button", { hasText: /generate/i });
-    if (await generateButton.isVisible()) {
-      await generateButton.click();
-      await page.waitForTimeout(500);
-    }
+  test("should reset and clear races/results", async ({ page }) => {
+    await clickGenerate(page);
+    await clickStart(page);
 
-    const startButton = page.locator("button", { hasText: /start|run|go/i });
-    if (await startButton.isVisible()) {
-      await startButton.click();
-      await page.waitForTimeout(200);
+    await expect(page.locator(".runner.is-running").first()).toBeVisible();
 
-      const resetButton = page.locator("button", { hasText: /reset|restart/i });
-      if (await resetButton.isVisible()) {
-        await resetButton.click();
-        await page.waitForTimeout(100);
+    await clickReset(page);
 
-        const runners = page.locator(".runner");
-        for (let i = 0; i < (await runners.count()); i++) {
-          const runner = runners.nth(i);
-          const transform = await runner.evaluate((el) => window.getComputedStyle(el).transform);
-          expect(transform).toContain("translateY(-50%)");
-        }
-      }
-    }
+    // After reset, program should be cleared
+    const racesSection = page.getByRole("region", { name: /races/i });
+    await expect(racesSection).toBeVisible();
+    await expect(racesSection).toContainText(/total:\s*0/i);
+    await expect(racesSection).toContainText(/no races yet/i);
+
+    const resultsSection = page.getByRole("region", { name: /results/i });
+    await expect(resultsSection).toBeVisible();
+    await expect(resultsSection).toContainText(/total:\s*0/i);
+    await expect(resultsSection).toContainText(/results will appear here/i);
+
+    // Center track should show empty state
+    const emptyTrack = page.locator(".empty-track").first();
+    await expect(emptyTrack.locator(".empty-track__text").first()).toContainText(/generate/i);
+
+    // Start should be disabled because there is no current race
+    await expect(page.getByRole("button", { name: /^start$/i })).toBeDisabled();
+    await expect(page.getByRole("button", { name: /generate/i })).toBeEnabled();
   });
 
   test("should display horse information", async ({ page }) => {
@@ -312,33 +334,17 @@ test.describe("Horse Racing Game - Race Page", () => {
   });
 
   test("should handle multiple races in sequence", async ({ page }) => {
-    const generateButton = page.locator("button", { hasText: /generate/i });
-    if (await generateButton.isVisible()) {
-      await generateButton.click();
-      await page.waitForTimeout(500);
-    }
+    // Run once
+    await clickGenerate(page);
+    await clickStart(page);
+    await expect(page.locator(".runner.is-running").first()).toBeVisible();
 
-    let startButton = page.locator("button", { hasText: /start|run|go/i }).first();
-    if (await startButton.isVisible()) {
-      await startButton.click();
-      await page.waitForTimeout(12000);
+    // Reset, then generate + start again (reset clears program)
+    await clickReset(page);
+    await clickGenerate(page);
+    await clickStart(page);
 
-      const resetButton = page.locator("button", { hasText: /reset|restart/i });
-      if (await resetButton.isVisible()) {
-        await resetButton.click();
-        await page.waitForTimeout(100);
-
-        startButton = page.locator("button", { hasText: /start|run|go/i }).first();
-        if (await startButton.isVisible()) {
-          await startButton.click();
-          await page.waitForTimeout(100);
-
-          const runners = page.locator(".runner.is-running");
-          const runningCount = await runners.count();
-          expect(runningCount).toBeGreaterThan(0);
-        }
-      }
-    }
+    await expect(page.locator(".runner.is-running").first()).toBeVisible();
   });
 
   test("should display track lanes with correct direction", async ({ page }) => {

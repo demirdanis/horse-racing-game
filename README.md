@@ -120,7 +120,7 @@ npm run e2e:ui
 Run a single test by name (example):
 
 ```bash
-npx playwright test tests/e2e/race.spec.ts -g "should generate program" --project=chromium
+npx playwright test tests/e2e/race.spec.ts -g "should generate races" --project=chromium
 ```
 
 After a run, view the HTML report:

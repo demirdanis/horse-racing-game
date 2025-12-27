@@ -11,14 +11,11 @@ function parsePositiveNumber(value: unknown): number | null {
   return n;
 }
 
-/**
- * Multiplies race speed in the UI (Track animation) and scales internal delays.
- *
- * - Default: 1 (normal speed)
- * - Example (fast tests): VITE_RACE_SPEED_MULTIPLIER=10
- */
 export const RACE_SPEED_MULTIPLIER =
-  parsePositiveNumber(import.meta.env.VITE_RACE_SPEED_MULTIPLIER) ?? 1;
+  parsePositiveNumber(import.meta.env?.VITE_RACE_SPEED_MULTIPLIER) ??
+  parsePositiveNumber(
+    typeof process !== "undefined" ? process.env?.VITE_RACE_SPEED_MULTIPLIER : undefined
+  ) ??
+  1;
 
-/** Base delay between races, scaled down by speed multiplier. */
 export const AUTO_START_DELAY_MS = Math.max(0, Math.round(1000 / RACE_SPEED_MULTIPLIER));
