@@ -60,7 +60,7 @@ const results = computed(() =>
       distance: r.distance,
       rows: (r.result?.finishOrder ?? []).map((h, i) => ({
         position: i + 1,
-        name: h.name,
+        name: h.name + "",
       })),
     }))
 );
