@@ -1,6 +1,6 @@
 import { ref, watch } from "vue";
 
-import Horse from "../horse/Horse.vue";
+import Horse from "@/components/atoms/horse/Horse.vue";
 import Track from "./Track.vue";
 import { fn } from "storybook/test";
 
@@ -30,7 +30,6 @@ export default {
       const trackState = ref<"ready" | "running" | "finished">(args.state);
       const horseState = ref<"ready" | "running" | "won">("ready");
 
-      // Controls -> local state sync
       watch(
         () => args.state,
         (val) => {

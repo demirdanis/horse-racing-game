@@ -14,6 +14,7 @@
             :key="col.key"
             class="th"
             :class="col.align"
+            :style="colStyle(col)"
           >
             {{ col.title }}
           </th>
@@ -27,6 +28,7 @@
             :key="col.key"
             class="td"
             :class="col.align"
+            :style="colStyle(col)"
           >
             <slot name="cell" :row="row" :col="col" :value="row[col.key]">
               {{ row[col.key] }}
@@ -47,11 +49,18 @@
 </template>
 
 <script setup lang="ts">
-import type { TableProps } from "./Table.types";
+import type { TableColumn, TableProps } from "./Table.types";
 
 const props = withDefaults(defineProps<TableProps>(), {
   borderStyle: "full",
 });
+
+function colStyle(col: TableColumn) {
+  if (col.width == null) return undefined;
+
+  const px = `${col.width}px`;
+  return { width: px, minWidth: px, maxWidth: px };
+}
 </script>
 
 <style scoped>
@@ -63,13 +72,13 @@ const props = withDefaults(defineProps<TableProps>(), {
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* ✅ width’ler tutarlı çalışsın */
 }
 
 .th,
 .td {
-  padding: 10px 12px;
-  font-size: 14px;
-
+  padding: 4px;
+  font-size: 10px;
   border: 1px solid var(--table-border-color);
 }
 

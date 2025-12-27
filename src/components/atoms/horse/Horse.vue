@@ -6,7 +6,7 @@
       '--horse-color': colorComputed,
       color: 'var(--horse-color)',
       '--gallop-duration': `${gallopDuration}ms`,
-      '--gallop-amp': gallopAmp, // ✅ eklendi
+      '--gallop-amp': gallopAmp,
     }"
     role="img"
     aria-label="Horse"
@@ -40,18 +40,15 @@ const conditionClamped = computed(() => {
   return Math.max(1, Math.min(100, props.condition ?? 50));
 });
 
-// hızlılık: condition yüksek => ms daha düşük
 const gallopDuration = computed(() => {
   const slowest = 1500;
   const fastest = 600;
-  const t = (conditionClamped.value - 1) / 99; // 0..1
+  const t = (conditionClamped.value - 1) / 99;
   return Math.round(slowest + (fastest - slowest) * t);
 });
 
-// amplitude: condition yüksek => daha büyük hareket
 const gallopAmp = computed(() => {
-  // 1 => 0.35, 100 => 1.0
-  const t = (conditionClamped.value - 1) / 99; // 0..1
+  const t = (conditionClamped.value - 1) / 99;
   const min = 0.35;
   const max = 1.0;
   return (min + (max - min) * t).toFixed(3);
