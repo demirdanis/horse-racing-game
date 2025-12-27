@@ -276,7 +276,6 @@ test.describe("Horse Racing Game - Race Page", () => {
 
     await clickReset(page);
 
-    // After reset, program should be cleared
     const racesSection = page.getByRole("region", { name: /races/i });
     await expect(racesSection).toBeVisible();
     await expect(racesSection).toContainText(/total:\s*0/i);
@@ -287,11 +286,9 @@ test.describe("Horse Racing Game - Race Page", () => {
     await expect(resultsSection).toContainText(/total:\s*0/i);
     await expect(resultsSection).toContainText(/results will appear here/i);
 
-    // Center track should show empty state
     const emptyTrack = page.locator(".empty-track").first();
     await expect(emptyTrack.locator(".empty-track__text").first()).toContainText(/generate/i);
 
-    // Start should be disabled because there is no current race
     await expect(page.getByRole("button", { name: /^start$/i })).toBeDisabled();
     await expect(page.getByRole("button", { name: /generate/i })).toBeEnabled();
   });
@@ -334,12 +331,10 @@ test.describe("Horse Racing Game - Race Page", () => {
   });
 
   test("should handle multiple races in sequence", async ({ page }) => {
-    // Run once
     await clickGenerate(page);
     await clickStart(page);
     await expect(page.locator(".runner.is-running").first()).toBeVisible();
 
-    // Reset, then generate + start again (reset clears program)
     await clickReset(page);
     await clickGenerate(page);
     await clickStart(page);

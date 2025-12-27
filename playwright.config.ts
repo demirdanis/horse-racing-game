@@ -34,7 +34,6 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       ...toEnvRecord(process.env),
-      // Make E2E much faster without raising timeouts.
       VITE_RACE_SPEED_MULTIPLIER: process.env.VITE_RACE_SPEED_MULTIPLIER ?? "10",
     },
   },

@@ -67,7 +67,6 @@ jobs:
 
       - name: E2E tests
         env:
-          # Speeds up races + inter-race delays so we don't need big timeouts.
           VITE_RACE_SPEED_MULTIPLIER: "10"
         run: npm run e2e
 
