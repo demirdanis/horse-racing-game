@@ -1,8 +1,4 @@
-export function sampleUniqueBy<T, K>(
-  arr: T[],
-  count: number,
-  getKey: (item: T) => K
-): T[] {
+export function sampleUniqueBy<T, K>(arr: T[], count: number, getKey: (item: T) => K): T[] {
   const seen = new Set<K>();
   const pool: T[] = [];
   for (const item of arr) {

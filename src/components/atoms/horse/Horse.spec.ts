@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import Horse from "./Horse.vue";
 import { mount } from "@vue/test-utils";
 
-function getStyleAttr(wrapper: any) {
+type StylableWrapper = { attributes: (name: string) => string | undefined };
+
+function getStyleAttr(wrapper: StylableWrapper) {
   return wrapper.attributes("style") ?? "";
 }
 
@@ -63,11 +65,7 @@ describe("Horse", () => {
     expect(extractCssVar(style, "--gallop-duration")).toBeTruthy();
     expect(extractCssVar(style, "--gallop-amp")).toBeTruthy();
 
-    expectCssVar(
-      style,
-      "--gallop-duration",
-      `${expectedGallopDurationMs(50)}ms`
-    );
+    expectCssVar(style, "--gallop-duration", `${expectedGallopDurationMs(50)}ms`);
     expectCssVar(style, "--gallop-amp", expectedGallopAmp(50));
   });
 
@@ -123,11 +121,7 @@ describe("Horse", () => {
     const wrapper = mount(Horse, { props: { condition: 0 } });
     const style = getStyleAttr(wrapper);
 
-    expectCssVar(
-      style,
-      "--gallop-duration",
-      `${expectedGallopDurationMs(1)}ms`
-    );
+    expectCssVar(style, "--gallop-duration", `${expectedGallopDurationMs(1)}ms`);
     expectCssVar(style, "--gallop-amp", expectedGallopAmp(1));
   });
 
@@ -135,11 +129,7 @@ describe("Horse", () => {
     const wrapper = mount(Horse, { props: { condition: 999 } });
     const style = getStyleAttr(wrapper);
 
-    expectCssVar(
-      style,
-      "--gallop-duration",
-      `${expectedGallopDurationMs(100)}ms`
-    );
+    expectCssVar(style, "--gallop-duration", `${expectedGallopDurationMs(100)}ms`);
     expectCssVar(style, "--gallop-amp", expectedGallopAmp(100));
   });
 
@@ -150,11 +140,7 @@ describe("Horse", () => {
       const wrapper = mount(Horse, { props: { condition: c } });
       const style = getStyleAttr(wrapper);
 
-      expectCssVar(
-        style,
-        "--gallop-duration",
-        `${expectedGallopDurationMs(c)}ms`
-      );
+      expectCssVar(style, "--gallop-duration", `${expectedGallopDurationMs(c)}ms`);
       expectCssVar(style, "--gallop-amp", expectedGallopAmp(c));
     }
   });
@@ -163,21 +149,13 @@ describe("Horse", () => {
     const wrapper = mount(Horse, { props: { condition: 1 } });
 
     let style = getStyleAttr(wrapper);
-    expectCssVar(
-      style,
-      "--gallop-duration",
-      `${expectedGallopDurationMs(1)}ms`
-    );
+    expectCssVar(style, "--gallop-duration", `${expectedGallopDurationMs(1)}ms`);
     expectCssVar(style, "--gallop-amp", expectedGallopAmp(1));
 
     await wrapper.setProps({ condition: 100 });
 
     style = getStyleAttr(wrapper);
-    expectCssVar(
-      style,
-      "--gallop-duration",
-      `${expectedGallopDurationMs(100)}ms`
-    );
+    expectCssVar(style, "--gallop-duration", `${expectedGallopDurationMs(100)}ms`);
     expectCssVar(style, "--gallop-amp", expectedGallopAmp(100));
   });
 

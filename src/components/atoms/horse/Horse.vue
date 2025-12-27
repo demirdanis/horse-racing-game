@@ -87,15 +87,13 @@ const stateClass = computed(() => ({
     transform: rotateZ(0deg) translateY(0);
   }
   25% {
-    transform: rotateZ(calc(18deg * var(--gallop-amp)))
-      translateY(calc(-2px * var(--gallop-amp)));
+    transform: rotateZ(calc(18deg * var(--gallop-amp))) translateY(calc(-2px * var(--gallop-amp)));
   }
   50% {
     transform: rotateZ(0deg) translateY(0);
   }
   75% {
-    transform: rotateZ(calc(-18deg * var(--gallop-amp)))
-      translateY(calc(2px * var(--gallop-amp)));
+    transform: rotateZ(calc(-18deg * var(--gallop-amp))) translateY(calc(2px * var(--gallop-amp)));
   }
   100% {
     transform: rotateZ(0deg) translateY(0);

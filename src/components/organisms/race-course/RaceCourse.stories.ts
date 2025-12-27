@@ -1,7 +1,18 @@
+import type {
+  RaceCourseProps,
+  RaceFinishedPayload,
+  RaceLaneFinishedPayload,
+} from "./RaceCourse.types";
 import { ref, watch } from "vue";
 
 import RaceCourse from "./RaceCourse.vue";
+import type { RaceState } from "@/types/race-state";
 import { fn } from "storybook/test";
+
+type StoryArgs = Omit<RaceCourseProps, "lanes"> & {
+  onLaneFinished?: (payload: RaceLaneFinishedPayload) => void;
+  onFinished?: (payload: RaceFinishedPayload) => void;
+};
 
 export default {
   title: "Organisms/RaceCourse",
@@ -19,10 +30,11 @@ export default {
   args: {
     state: "ready",
     direction: "ltr",
+    distance: 1200,
     onLaneFinished: fn(),
     onFinished: fn(),
   },
-  render: (args: any) => ({
+  render: (args: StoryArgs) => ({
     components: { RaceCourse },
     setup() {
       const lanes = ref([
@@ -32,12 +44,12 @@ export default {
         { id: 4, laneNumber: 4, color: "#B455FF", condition: 55 },
       ]);
 
-      const localState = ref<"ready" | "running" | "finished">(args.state);
+      const localState = ref<RaceState>(args.state ?? "ready");
 
       watch(
         () => args.state,
         (val) => {
-          localState.value = val;
+          localState.value = val ?? "ready";
         },
         { immediate: true }
       );
@@ -53,20 +65,13 @@ export default {
         localState.value = "ready";
       }
 
-      function onLaneFinished(payload: {
-        laneId: number | string;
-        place: number;
-        order: Array<number | string>;
-      }) {
-        console.log(
-          `Lane ${payload.laneId} finished at place #${payload.place}`,
-          payload.order
-        );
+      function onLaneFinished(payload: RaceLaneFinishedPayload) {
+        console.log(`Lane ${payload.laneId} finished at place #${payload.place}`, payload.order);
 
         args.onLaneFinished?.(payload);
       }
 
-      function onFinished(payload: { order: Array<number | string> }) {
+      function onFinished(payload: RaceFinishedPayload) {
         console.log("🏁 RACE FINISHED");
         console.log("Final order (1 → N):", payload.order);
 
@@ -108,6 +113,7 @@ export default {
 
         <RaceCourse
           :lanes="lanes"
+          :distance="args.distance"
           :state="localState"
           :direction="args.direction"
           @laneFinished="onLaneFinished"

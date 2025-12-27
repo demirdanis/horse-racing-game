@@ -2,11 +2,11 @@ export interface TableColumn {
   key: string;
   title: string;
   align?: "left" | "center" | "right";
-  width?: number;
+  width?: number | null;
 }
 
 export interface TableProps {
   columns: TableColumn[];
-  rows: Record<string, any>[];
+  rows: Record<string, unknown>[];
   borderStyle?: "full" | "inner" | "outer";
 }

@@ -1,5 +1,8 @@
 import Table from "../../atoms/table/Table.vue";
 import TitledSection from "./TitledSection.vue";
+import type { TitledSectionProps } from "./TitledSection.types";
+
+type StoryArgs = TitledSectionProps;
 
 export default {
   title: "Layout/TitledSection",
@@ -13,7 +16,7 @@ export default {
     title: "Horse List",
     subtitle: "Race #5",
   },
-  render: (args: any) => ({
+  render: (args: StoryArgs) => ({
     components: { TitledSection, Table },
     setup() {
       const columns = [
@@ -55,7 +58,7 @@ export const WithoutSubtitle = {
 };
 
 export const WithActions = {
-  render: (args: any) => ({
+  render: (args: StoryArgs) => ({
     components: { TitledSection, Table },
     setup() {
       const columns = [

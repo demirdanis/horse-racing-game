@@ -39,11 +39,13 @@ async function tick() {
   await Promise.resolve();
 }
 
-async function startAndPrime(wrapper: any, ts0 = 0) {
+async function startAndPrime(ts0 = 0) {
   await tick();
   runRafSeries([ts0]);
   await tick();
 }
+
+type TrackSlotProps = { progress: number };
 
 describe("Track", () => {
   beforeEach(() => {
@@ -115,8 +117,8 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "ready" },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
@@ -128,12 +130,12 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "running", durationSec: 1 },
       slots: {
-        default: (slotProps: any) =>
+        default: (slotProps: TrackSlotProps) =>
           h("span", { class: "p" }, String(slotProps.progress)),
       },
     });
 
-    await startAndPrime(wrapper, 0);
+    await startAndPrime(0);
     runRafSeries([1000]);
 
     expect(wrapper.emitted("finished")).toBeTruthy();
@@ -144,12 +146,12 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "running", durationSec: 2 },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
-    await startAndPrime(wrapper, 0);
+    await startAndPrime(0);
 
     runRafSeries([500]);
     await tick();
@@ -174,12 +176,12 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "running", durationSec: 2 },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
-    await startAndPrime(wrapper, 0);
+    await startAndPrime(0);
 
     runRafSeries([500]);
     await tick();
@@ -194,7 +196,7 @@ describe("Track", () => {
     await wrapper.setProps({ state: "running" });
     await tick();
 
-    await startAndPrime(wrapper, 1000);
+    await startAndPrime(1000);
 
     const p2 = Number(wrapper.find(".p").text());
     expect(p2).toBeCloseTo(p1, 3);
@@ -210,12 +212,12 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "running", durationSec: 2 },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
-    await startAndPrime(wrapper, 0);
+    await startAndPrime(0);
 
     runRafSeries([500]);
     await tick();
@@ -234,8 +236,8 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "paused", durationSec: 1 },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
@@ -252,12 +254,12 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "running", durationSec: 0 },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
-    await startAndPrime(wrapper, 0);
+    await startAndPrime(0);
 
     runRafSeries([50]);
     await tick();
@@ -277,12 +279,12 @@ describe("Track", () => {
     const wrapper = mount(Track, {
       props: { state: "running", durationSec: 2 },
       slots: {
-        default: (slotProps: any) =>
-          h("span", { class: "p" }, (slotProps.progress as number).toFixed(3)),
+        default: (slotProps: TrackSlotProps) =>
+          h("span", { class: "p" }, slotProps.progress.toFixed(3)),
       },
     });
 
-    await startAndPrime(wrapper, 0);
+    await startAndPrime(0);
 
     runRafSeries([500]);
     await tick();

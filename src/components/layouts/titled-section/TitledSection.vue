@@ -31,8 +31,6 @@ import type { TitledSectionProps } from "./TitledSection.types";
 const props = withDefaults(defineProps<TitledSectionProps>(), {
   borderless: false,
 });
-
-console.log("props", props);
 </script>
 
 <style scoped>

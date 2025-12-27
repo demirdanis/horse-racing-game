@@ -41,9 +41,7 @@ describe("TitledSection", () => {
       props: { title: "Title", borderless: false },
     });
 
-    expect(wrapper.find("section.section").classes()).not.toContain(
-      "borderless"
-    );
+    expect(wrapper.find("section.section").classes()).not.toContain("borderless");
 
     await wrapper.setProps({ borderless: true });
     expect(wrapper.find("section.section").classes()).toContain("borderless");

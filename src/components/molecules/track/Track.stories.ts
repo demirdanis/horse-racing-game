@@ -1,8 +1,12 @@
 import { ref, watch } from "vue";
 
 import Horse from "@/components/atoms/horse/Horse.vue";
+import type { RaceState } from "@/types/race-state";
 import Track from "./Track.vue";
+import type { TrackProps } from "./Track.types";
 import { fn } from "storybook/test";
+
+type StoryArgs = TrackProps & { onFinished?: () => void };
 
 export default {
   title: "Molecules/Track",
@@ -24,16 +28,16 @@ export default {
     laneNumber: 1,
     onFinished: fn(),
   },
-  render: (args: any) => ({
+  render: (args: StoryArgs) => ({
     components: { Track, Horse },
     setup() {
-      const trackState = ref<"ready" | "running" | "finished">(args.state);
+      const trackState = ref<RaceState>(args.state ?? "ready");
       const horseState = ref<"ready" | "running" | "won">("ready");
 
       watch(
         () => args.state,
         (val) => {
-          trackState.value = val;
+          trackState.value = val ?? "ready";
 
           if (val === "running") horseState.value = "running";
           else if (val === "finished") horseState.value = "won";

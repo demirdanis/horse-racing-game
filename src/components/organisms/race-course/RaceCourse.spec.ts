@@ -69,13 +69,9 @@ describe("RaceCourse", () => {
   });
 
   it("calls calculateLaneDurationSec with lane.condition and props.distance", async () => {
-    const { calculateLaneDurationSec } = await import(
-      "@/store/modules/race/race.helpers"
-    );
+    const { calculateLaneDurationSec } = await import("@/store/modules/race/race.helpers");
 
-    const mock = calculateLaneDurationSec as unknown as ReturnType<
-      typeof vi.fn
-    >;
+    const mock = calculateLaneDurationSec as unknown as ReturnType<typeof vi.fn>;
     mock.mockClear();
 
     mount(RaceCourse, {
@@ -207,9 +203,7 @@ describe("RaceCourse", () => {
     tracks[0].vm.$emit("finished");
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.findAll(".horse-stub")[0].attributes("data-state")).toBe(
-      "won"
-    );
+    expect(wrapper.findAll(".horse-stub")[0].attributes("data-state")).toBe("won");
 
     await wrapper.setProps({ state: "paused" });
     await wrapper.vm.$nextTick();
@@ -217,8 +211,6 @@ describe("RaceCourse", () => {
     await wrapper.setProps({ state: "running" });
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.findAll(".horse-stub")[0].attributes("data-state")).toBe(
-      "running"
-    );
+    expect(wrapper.findAll(".horse-stub")[0].attributes("data-state")).toBe("running");
   });
 });

@@ -1,5 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
+function toEnvRecord(env: NodeJS.ProcessEnv): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(env)) {
+    if (typeof v === "string") out[k] = v;
+  }
+  return out;
+}
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -24,5 +32,10 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
+    env: {
+      ...toEnvRecord(process.env),
+      // Make E2E much faster without raising timeouts.
+      VITE_RACE_SPEED_MULTIPLIER: process.env.VITE_RACE_SPEED_MULTIPLIER ?? "10",
+    },
   },
 });

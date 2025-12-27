@@ -36,13 +36,13 @@ type LaneId = string | number;
 
 const emit = defineEmits<RaceCourseEmits>();
 
-const finishedMap = reactive<Record<LaneId, boolean>>({});
+const finishedMap = reactive<Record<string, boolean>>({});
 
 const finishedOrder = ref<LaneId[]>([]);
 
 function resetFinished() {
-  for (const k of Object.keys(finishedMap)) delete finishedMap[k as any];
-  for (const lane of props.lanes) finishedMap[lane.id] = false;
+  for (const k of Object.keys(finishedMap)) delete finishedMap[k];
+  for (const lane of props.lanes) finishedMap[String(lane.id)] = false;
 
   finishedOrder.value = [];
 }
@@ -58,23 +58,25 @@ watch(
 );
 
 function handleLaneFinished(laneId: LaneId) {
-  if (finishedMap[laneId]) return;
+  const key = String(laneId);
 
-  finishedMap[laneId] = true;
+  if (finishedMap[key]) return;
+
+  finishedMap[key] = true;
 
   finishedOrder.value.push(laneId);
   const place = finishedOrder.value.length;
 
   emit("laneFinished", { laneId, place, order: [...finishedOrder.value] });
 
-  const allDone = props.lanes.every((l) => finishedMap[l.id]);
+  const allDone = props.lanes.every((l) => finishedMap[String(l.id)]);
   if (allDone) {
     emit("finished", { order: [...finishedOrder.value] });
   }
 }
 
 function horseState(laneId: LaneId) {
-  if (finishedMap[laneId]) return "won";
+  if (finishedMap[String(laneId)]) return "won";
   if (props.state === "running") return "running";
   return "ready";
 }

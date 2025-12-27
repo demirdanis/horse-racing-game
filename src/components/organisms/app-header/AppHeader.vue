@@ -5,19 +5,13 @@
     </div>
 
     <div class="right">
-      <Button
-        variant="secondary"
-        :disabled="props.generateDisabled"
-        @click="onGenerate"
-      >
-        Generate Program
+      <Button variant="secondary" :disabled="props.generateDisabled" @click="onGenerate">
+        Generate Races
       </Button>
 
-      <Button
-        variant="primary"
-        :disabled="props.startPauseDisabled"
-        @click="onStartPause"
-      >
+      <Button variant="secondary" :disabled="props.resetDisabled" @click="onReset"> Reset </Button>
+
+      <Button variant="primary" :disabled="props.startPauseDisabled" @click="onStartPause">
         {{ startPauseLabel }}
       </Button>
     </div>
@@ -33,21 +27,29 @@ const props = withDefaults(defineProps<AppHeaderProps>(), {
   title: "Race App",
   state: "ready",
   generateDisabled: false,
+  resetDisabled: false,
   startPauseDisabled: false,
 });
 
 const emit = defineEmits<{
   (e: "generate"): void;
+  (e: "reset"): void;
   (e: "start"): void;
   (e: "pause"): void;
 }>();
 
 const startPauseLabel = computed(() => {
-  return props.state === "running" ? "Pause" : "Start";
+  if (props.state === "running") return "Pause";
+  if (props.state === "paused") return "Resume";
+  return "Start";
 });
 
 function onGenerate() {
   if (!props.generateDisabled) emit("generate");
+}
+
+function onReset() {
+  if (!props.resetDisabled) emit("reset");
 }
 
 function onStartPause() {

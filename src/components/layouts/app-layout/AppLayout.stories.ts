@@ -7,7 +7,7 @@ export default {
   title: "Layout/AppLayout",
   component: AppLayout,
   tags: ["autodocs"],
-  render: (args: any) => ({
+  render: (args: Record<string, unknown>) => ({
     components: { AppLayout, AppHeader, TitledSection, Table },
     setup() {
       const horsesColumns = [

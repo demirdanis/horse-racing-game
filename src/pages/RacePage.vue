@@ -1,31 +1,43 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
 
 import AppLayout from "@/components/layouts/app-layout/AppLayout.vue";
 import AppHeader from "@/components/organisms/app-header/AppHeader.vue";
+import type { AppRunState } from "@/components/organisms/app-header/AppHeader.types";
 import RaceCourse from "@/components/organisms/race-course/RaceCourse.vue";
 import TitledSection from "@/components/layouts/titled-section/TitledSection.vue";
 import Table from "@/components/atoms/table/Table.vue";
 import type { TableColumn } from "@/components/atoms/table/Table.types";
 import HorseIcon from "@/icons/HorseIcon.vue";
 import { HORSES } from "@/data/horses";
+import type { Race, RaceLane } from "@/store/modules/race/race.types";
+import type { RaceFinishedPayload } from "@/components/organisms/race-course/RaceCourse.types";
+import { DEFAULT_RACE_COUNT } from "@/store/modules/race/race.constants";
 
 const store = useStore();
 
-const races = computed(() => store.getters["race/races"]);
-const currentRace = computed(() => store.getters["race/currentRace"]);
+const races = computed<Race[]>(() => store.getters["race/races"]);
+const currentRace = computed<Race | null>(() => store.getters["race/currentRace"]);
 const hasRaces = computed(() => store.getters["race/hasRaces"]);
+const programLocked = computed<boolean>(() => store.getters["race/programLocked"]);
 
-const headerState = computed(() => {
-  const status = currentRace.value?.status ?? "ready";
-  return status === "running" || status === "finished" ? "running" : "ready";
+const generateDisabled = computed(() => {
+  const status = currentRace.value?.status;
+  return programLocked.value || status === "running" || status === "paused";
+});
+
+const resetDisabled = computed(() => !hasRaces.value);
+const startPauseDisabled = computed(() => !currentRace.value);
+
+const headerState = computed<AppRunState>(() => {
+  return currentRace.value?.status ?? "ready";
 });
 
 const raceDetails = computed(() =>
-  races.value.map((r: any) => ({
+  races.value.map((r) => ({
     title: `Race ${r.raceNo} - ${r.distance}m`,
-    rows: r.lanes.map((l: any, i: number) => ({
+    rows: r.lanes.map((l, i: number) => ({
       position: i + 1,
       name: l.horse.name,
     })),
@@ -40,13 +52,18 @@ const horsesRows = computed(() =>
   }))
 );
 
-const results = ref<
-  Array<{
-    raceNo: number;
-    distance: number;
-    rows: Array<{ position: number; name: string }>;
-  }>
->([]);
+const results = computed(() =>
+  races.value
+    .filter((r) => Boolean(r.result))
+    .map((r) => ({
+      raceNo: r.raceNo,
+      distance: r.distance,
+      rows: (r.result?.finishOrder ?? []).map((h, i) => ({
+        position: i + 1,
+        name: h.name,
+      })),
+    }))
+);
 
 const horsesColumns: TableColumn[] = [
   { key: "name", title: "Name", align: "left", width: 64 },
@@ -65,69 +82,25 @@ const resultsColumns: TableColumn[] = [
 ];
 
 function handleGenerateRaces() {
-  store.dispatch("race/generateRaces", 6);
-  results.value = [];
+  store.dispatch("race/generateRaces", DEFAULT_RACE_COUNT);
 }
 
 function handleStart() {
-  const idx = store.getters["race/currentRace"]
-    ? store.state.race.currentRaceIndex
-    : null;
-
-  if (idx !== null) {
-    store.dispatch("race/startRace", idx);
-  }
+  store.dispatch("race/startCurrentRace");
 }
 
 function handlePause() {
-  const idx = store.getters["race/currentRace"]
-    ? store.state.race.currentRaceIndex
-    : null;
-  if (idx !== null) store.dispatch("race/pauseRace", idx);
+  store.dispatch("race/pauseCurrentRace");
+}
+
+function handleReset() {
+  store.dispatch("race/reset");
 }
 
 function handleLaneFinished() {}
 
-function handleRaceFinished(payload: any) {
-  const idx = store.state.race.currentRaceIndex;
-  if (idx === null) return;
-
-  const race = store.state.race.races[idx];
-  if (!race) return;
-
-  const finishOrder = payload.order
-    .map((laneId: string) => {
-      const lane = race.lanes.find((l: any) => l.horse.id === laneId);
-      return lane ? lane.horse : null;
-    })
-    .filter(Boolean);
-
-  store.dispatch("race/finishRace", {
-    raceIndex: idx,
-    result: { finishOrder },
-  });
-
-  results.value.push({
-    raceNo: race.raceNo,
-    distance: race.distance,
-    rows: finishOrder.map((h: any, i: number) => ({
-      position: i + 1,
-      name: h.name,
-    })),
-  });
-
-  store.dispatch("race/goToNextRace");
-
-  setTimeout(() => {
-    const nextIdx = store.state.race.currentRaceIndex;
-    if (
-      nextIdx !== null &&
-      store.state.race.races[nextIdx].status === "ready"
-    ) {
-      console.log("Starting next race");
-      handleStart();
-    }
-  }, 1000);
+function handleRaceFinished(payload: RaceFinishedPayload) {
+  store.dispatch("race/finishCurrentRace", payload);
 }
 </script>
 
@@ -138,7 +111,11 @@ function handleRaceFinished(payload: any) {
         <AppHeader
           title="Horse Racing"
           :state="headerState"
+          :generateDisabled="generateDisabled"
+          :resetDisabled="resetDisabled"
+          :startPauseDisabled="startPauseDisabled"
           @generate="handleGenerateRaces"
+          @reset="handleReset"
           @start="handleStart"
           @pause="handlePause"
         />
@@ -146,15 +123,11 @@ function handleRaceFinished(payload: any) {
 
       <template #left>
         <TitledSection title="Horses" :subtitle="`Available: ${HORSES.length}`">
-          <Table
-            :columns="horsesColumns"
-            :rows="horsesRows"
-            borderStyle="inner"
-          >
+          <Table :columns="horsesColumns" :rows="horsesRows" borderStyle="inner">
             <template #cell="{ col, value }">
               <HorseIcon
                 v-if="col.key === 'color'"
-                :color="value"
+                :color="typeof value === 'string' ? value : undefined"
                 :size="32"
                 class="inline-block"
               />
@@ -166,17 +139,13 @@ function handleRaceFinished(payload: any) {
 
       <template #center>
         <TitledSection
-          :title="
-            hasRaces
-              ? `Race ${currentRace?.raceNo} - ${currentRace?.distance}m`
-              : 'No Race'
-          "
+          :title="hasRaces ? `Race ${currentRace?.raceNo} - ${currentRace?.distance}m` : 'No Race'"
           subtitle="Race Track"
         >
           <div v-if="currentRace">
             <RaceCourse
               :lanes="
-                currentRace.lanes.map((l: any) => ({
+                currentRace.lanes.map((l: RaceLane) => ({
                   id: l.horse.id,
                   laneNumber: l.laneNumber,
                   color: l.horse.color,
@@ -213,11 +182,7 @@ function handleRaceFinished(payload: any) {
                   }"
                 >
                   <TitledSection :title="rd.title" :borderless="true">
-                    <Table
-                      :columns="raceDetailColumns"
-                      :rows="rd.rows"
-                      borderStyle="inner"
-                    />
+                    <Table :columns="raceDetailColumns" :rows="rd.rows" borderStyle="inner" />
                   </TitledSection>
                 </div>
               </div>
@@ -227,10 +192,7 @@ function handleRaceFinished(payload: any) {
           </div>
 
           <div class="right-col">
-            <TitledSection
-              title="Results"
-              :subtitle="`Total: ${results.length}`"
-            >
+            <TitledSection title="Results" :subtitle="`Total: ${results.length}`">
               <div v-if="results.length > 0" class="list">
                 <div
                   v-for="(result, idx) in results"
@@ -242,18 +204,12 @@ function handleRaceFinished(payload: any) {
                     :title="`Race ${result.raceNo} - ${result.distance}m`"
                     :borderless="true"
                   >
-                    <Table
-                      :columns="resultsColumns"
-                      :rows="result.rows"
-                      borderStyle="inner"
-                    />
+                    <Table :columns="resultsColumns" :rows="result.rows" borderStyle="inner" />
                   </TitledSection>
                 </div>
               </div>
 
-              <div v-else class="empty-note">
-                Results will appear here as races finish
-              </div>
+              <div v-else class="empty-note">Results will appear here as races finish</div>
             </TitledSection>
           </div>
         </div>

@@ -1,8 +1,9 @@
+import { DEFAULT_RACE_COUNT, HORSES_PER_RACE } from "../../src/store/modules/race/race.constants";
 import { expect, test } from "@playwright/test";
 
 test.describe("Horse Racing Game - Race Page", () => {
   test.beforeEach(async ({ page }) => {
-    await page. goto("/");
+    await page.goto("/");
   });
 
   test("should load the race page successfully", async ({ page }) => {
@@ -29,7 +30,7 @@ test.describe("Horse Racing Game - Race Page", () => {
     expect(trackCount).toBeGreaterThan(0);
   });
 
-  test("should generate program with 6 races and 10 horses each", async ({
+  test(`should generate program with ${DEFAULT_RACE_COUNT} races and ${HORSES_PER_RACE} horses each`, async ({
     page,
   }) => {
     await page.waitForLoadState("networkidle");
@@ -42,12 +43,12 @@ test.describe("Horse Racing Game - Race Page", () => {
     const raceBlocks = racesSection.getByRole("region", {
       name: /race\s+\d+\s+-\s+\d+m/i,
     });
-    await expect(raceBlocks).toHaveCount(6);
+    await expect(raceBlocks).toHaveCount(DEFAULT_RACE_COUNT);
 
-    for (let i = 0; i < 6; i++) {
-      const raceBlock = raceBlocks. nth(i);
-      const horseRows = raceBlock. locator("table tbody tr");
-      await expect(horseRows).toHaveCount(10);
+    for (let i = 0; i < DEFAULT_RACE_COUNT; i++) {
+      const raceBlock = raceBlocks.nth(i);
+      const horseRows = raceBlock.locator("table tbody tr");
+      await expect(horseRows).toHaveCount(HORSES_PER_RACE);
     }
   });
 
@@ -61,7 +62,7 @@ test.describe("Horse Racing Game - Race Page", () => {
 
     const horseConditionByName = new Map<string, number>();
     const horseRows = horsesSection.locator("table tbody tr");
-    const horseRowCount = await horseRows. count();
+    const horseRowCount = await horseRows.count();
     for (let i = 0; i < horseRowCount; i++) {
       const row = horseRows.nth(i);
       const name = (await row.locator("td").nth(0).innerText()).trim();
@@ -76,39 +77,39 @@ test.describe("Horse Racing Game - Race Page", () => {
     await expect(racesSection).toBeVisible();
 
     const race1Block = racesSection.getByRole("region", {
-      name:  /race\s+1\s+-\s+\d+m/i,
+      name: /race\s+1\s+-\s+\d+m/i,
     });
     await expect(race1Block).toBeVisible();
 
-    const race1HorseRows = race1Block. locator("table tbody tr");
-    await expect(race1HorseRows).toHaveCount(10);
+    const race1HorseRows = race1Block.locator("table tbody tr");
+    await expect(race1HorseRows).toHaveCount(HORSES_PER_RACE);
 
     const race1HorseNames: string[] = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < HORSES_PER_RACE; i++) {
       const name = (await race1HorseRows.nth(i).locator("td").nth(1).innerText()).trim();
       race1HorseNames.push(name);
     }
 
     await page.getByRole("button", { name: /^start$/i }).click();
 
-    const resultsSection = page.getByRole("region", { name:  /results/i });
+    const resultsSection = page.getByRole("region", { name: /results/i });
     await expect(resultsSection).toBeVisible();
 
     const race1ResultBlock = resultsSection.getByRole("region", {
-      name:  /race\s+1\s+-\s+\d+m/i,
+      name: /race\s+1\s+-\s+\d+m/i,
     });
     await expect(race1ResultBlock).toBeVisible({ timeout: 30_000 });
 
     const resultRows = race1ResultBlock.locator("table tbody tr");
-    await expect(resultRows).toHaveCount(10);
+    await expect(resultRows).toHaveCount(HORSES_PER_RACE);
 
     const actualResultOrder: string[] = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < HORSES_PER_RACE; i++) {
       const name = (await resultRows.nth(i).locator("td").nth(1).innerText()).trim();
       actualResultOrder.push(name);
     }
 
-    const expectedOrder = [... race1HorseNames].sort((a, b) => {
+    const expectedOrder = [...race1HorseNames].sort((a, b) => {
       const ca = horseConditionByName.get(a);
       const cb = horseConditionByName.get(b);
       if (ca == null || cb == null) return 0;
@@ -118,7 +119,7 @@ test.describe("Horse Racing Game - Race Page", () => {
     expect(actualResultOrder).toEqual(expectedOrder);
   });
 
-  test("should complete all 6 races with correct results", async ({ page }) => {
+  test(`should complete all ${DEFAULT_RACE_COUNT} races with correct results`, async ({ page }) => {
     test.setTimeout(240_000);
 
     await page.waitForLoadState("networkidle");
@@ -130,7 +131,7 @@ test.describe("Horse Racing Game - Race Page", () => {
 
     const horseConditionByName = new Map<string, number>();
     const horseRows = horsesSection.locator("table tbody tr");
-    const horseRowCount = await horseRows. count();
+    const horseRowCount = await horseRows.count();
     for (let i = 0; i < horseRowCount; i++) {
       const row = horseRows.nth(i);
       const name = (await row.locator("td").nth(0).innerText()).trim();
@@ -145,18 +146,18 @@ test.describe("Horse Racing Game - Race Page", () => {
     await expect(racesSection).toBeVisible();
 
     const expectedOrderByRaceNo = new Map<number, string[]>();
-    for (let raceNo = 1; raceNo <= 6; raceNo++) {
+    for (let raceNo = 1; raceNo <= DEFAULT_RACE_COUNT; raceNo++) {
       const raceBlock = racesSection.getByRole("region", {
-        name:  new RegExp(`race\\s+${raceNo}\\s+-\\s+\\d+m`, "i"),
+        name: new RegExp(`race\\s+${raceNo}\\s+-\\s+\\d+m`, "i"),
       });
       await expect(raceBlock).toBeVisible();
 
       const rows = raceBlock.locator("table tbody tr");
-      await expect(rows).toHaveCount(10);
+      await expect(rows).toHaveCount(HORSES_PER_RACE);
 
       const names: string[] = [];
-      for (let i = 0; i < 10; i++) {
-        const name = (await rows. nth(i).locator("td").nth(1).innerText()).trim();
+      for (let i = 0; i < HORSES_PER_RACE; i++) {
+        const name = (await rows.nth(i).locator("td").nth(1).innerText()).trim();
         names.push(name);
       }
 
@@ -167,7 +168,7 @@ test.describe("Horse Racing Game - Race Page", () => {
         return cb - ca;
       });
 
-      expectedOrderByRaceNo. set(raceNo, expectedOrder);
+      expectedOrderByRaceNo.set(raceNo, expectedOrder);
     }
 
     await page.getByRole("button", { name: /^start$/i }).click();
@@ -179,19 +180,19 @@ test.describe("Horse Racing Game - Race Page", () => {
       name: /race\s+\d+\s+-\s+\d+m/i,
     });
 
-    await expect(resultBlocks).toHaveCount(6, { timeout: 240_000 });
+    await expect(resultBlocks).toHaveCount(DEFAULT_RACE_COUNT, { timeout: 240_000 });
 
-    for (let raceNo = 1; raceNo <= 6; raceNo++) {
+    for (let raceNo = 1; raceNo <= DEFAULT_RACE_COUNT; raceNo++) {
       const resultBlock = resultsSection.getByRole("region", {
         name: new RegExp(`race\\s+${raceNo}\\s+-\\s+\\d+m`, "i"),
       });
       await expect(resultBlock).toBeVisible();
 
       const resultRows = resultBlock.locator("table tbody tr");
-      await expect(resultRows).toHaveCount(10);
+      await expect(resultRows).toHaveCount(HORSES_PER_RACE);
 
       const actualOrder: string[] = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < HORSES_PER_RACE; i++) {
         const name = (await resultRows.nth(i).locator("td").nth(1).innerText()).trim();
         actualOrder.push(name);
       }
@@ -254,7 +255,7 @@ test.describe("Horse Racing Game - Race Page", () => {
     }
 
     const startButton = page.locator("button", { hasText: /start|run|go/i });
-    if (await startButton. isVisible()) {
+    if (await startButton.isVisible()) {
       await startButton.click();
       await page.waitForTimeout(200);
 
@@ -266,9 +267,7 @@ test.describe("Horse Racing Game - Race Page", () => {
         const runners = page.locator(".runner");
         for (let i = 0; i < (await runners.count()); i++) {
           const runner = runners.nth(i);
-          const transform = await runner.evaluate(
-            (el) => window.getComputedStyle(el).transform
-          );
+          const transform = await runner.evaluate((el) => window.getComputedStyle(el).transform);
           expect(transform).toContain("translateY(-50%)");
         }
       }
@@ -282,7 +281,7 @@ test.describe("Horse Racing Game - Race Page", () => {
       await page.waitForTimeout(200);
     }
 
-    const horseSection = page.getByRole('region', { name: /Horses/i });
+    const horseSection = page.getByRole("region", { name: /Horses/i });
     await expect(horseSection).toBeVisible();
 
     const horseRows = horseSection.locator("table tbody tr");
@@ -291,7 +290,7 @@ test.describe("Horse Racing Game - Race Page", () => {
   });
 
   test("should display race results after completion", async ({ page }) => {
-    const generateButton = page.locator("button", { hasText:  /generate/i });
+    const generateButton = page.locator("button", { hasText: /generate/i });
     if (await generateButton.isVisible()) {
       await generateButton.click();
       await page.waitForTimeout(500);
@@ -313,15 +312,13 @@ test.describe("Horse Racing Game - Race Page", () => {
   });
 
   test("should handle multiple races in sequence", async ({ page }) => {
-    const generateButton = page.locator("button", { hasText:  /generate/i });
+    const generateButton = page.locator("button", { hasText: /generate/i });
     if (await generateButton.isVisible()) {
       await generateButton.click();
       await page.waitForTimeout(500);
     }
 
-    let startButton = page
-      .locator("button", { hasText: /start|run|go/i })
-      .first();
+    let startButton = page.locator("button", { hasText: /start|run|go/i }).first();
     if (await startButton.isVisible()) {
       await startButton.click();
       await page.waitForTimeout(12000);
@@ -331,9 +328,7 @@ test.describe("Horse Racing Game - Race Page", () => {
         await resetButton.click();
         await page.waitForTimeout(100);
 
-        startButton = page
-          .locator("button", { hasText: /start|run|go/i })
-          .first();
+        startButton = page.locator("button", { hasText: /start|run|go/i }).first();
         if (await startButton.isVisible()) {
           await startButton.click();
           await page.waitForTimeout(100);
@@ -346,9 +341,7 @@ test.describe("Horse Racing Game - Race Page", () => {
     }
   });
 
-  test("should display track lanes with correct direction", async ({
-    page,
-  }) => {
+  test("should display track lanes with correct direction", async ({ page }) => {
     const generateButton = page.locator("button", { hasText: /generate/i });
     if (await generateButton.isVisible()) {
       await generateButton.click();
@@ -357,6 +350,6 @@ test.describe("Horse Racing Game - Race Page", () => {
 
     const tracks = page.locator(".track-root");
 
-    await expect(tracks. first()).toBeVisible();
+    await expect(tracks.first()).toBeVisible();
   });
 });

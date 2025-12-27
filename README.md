@@ -17,7 +17,7 @@ The app lets you generate a program of **6 races**, each with **10 horses**, the
 ## Requirements
 
 - **Node.js**: use a modern Node version compatible with Vite 7.
-	- Recommended: **Node 22.12+** (or newer)
+  - Recommended: **Node 22.12+** (or newer)
 
 - **npm** (ships with Node)
 
@@ -68,6 +68,12 @@ npm run test:storybook
 # E2E
 npm run e2e
 npm run e2e:ui
+
+# Formatting / Linting
+npm run format
+npm run format:check
+npm run lint
+npm run lint:fix
 ```
 
 ## Testing
@@ -122,6 +128,36 @@ After a run, view the HTML report:
 ```bash
 npx playwright show-report
 ```
+
+#### Speeding up E2E
+
+To reduce flakiness and avoid large timeouts, E2E runs can be sped up via a Vite env flag:
+
+```bash
+VITE_RACE_SPEED_MULTIPLIER=10 npm run e2e
+```
+
+This scales Track animation speed and internal delays between races.
+
+## CI
+
+This repo includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs on pushes to `main` and on pull requests.
+
+It runs:
+
+- ESLint (`npm run lint`)
+- Prettier check (`npm run format:check`)
+- Typecheck (`vue-tsc -b`)
+- Unit tests (`npm run test:unit:run`)
+- Build (`npm run build`)
+- Playwright E2E (`npm run e2e`, headless)
+
+Playwright reports are uploaded as build artifacts on every run.
+
+## Editor Setup
+
+- The workspace has VS Code settings in `.vscode/settings.json` to use Prettier as the default formatter.
+- Extensions are recommended in `.vscode/extensions.json` (Volar, ESLint, Prettier).
 
 ## Project Structure
 

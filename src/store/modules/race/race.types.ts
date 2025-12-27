@@ -25,4 +25,6 @@ export interface RaceModuleState {
   races: Race[];
   currentRaceIndex: number | null;
   tableBorderStyle: "full" | "inner" | "outer";
+  autoStartTimerId: ReturnType<typeof setTimeout> | null;
+  programLocked: boolean;
 }

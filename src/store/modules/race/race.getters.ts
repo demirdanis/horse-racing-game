@@ -17,12 +17,10 @@ export const getters = {
   totalRacesCount: (state: RaceModuleState): number => state.races.length,
 
   allRacesCompleted: (state: RaceModuleState): boolean => {
-    return (
-      state.races.length > 0 &&
-      state.races.every((r) => r.status === "finished")
-    );
+    return state.races.length > 0 && state.races.every((r) => r.status === "finished");
   },
 
-  tableBorderStyle: (state: RaceModuleState): "full" | "inner" | "outer" =>
-    state.tableBorderStyle,
+  programLocked: (state: RaceModuleState): boolean => state.programLocked,
+
+  tableBorderStyle: (state: RaceModuleState): "full" | "inner" | "outer" => state.tableBorderStyle,
 };

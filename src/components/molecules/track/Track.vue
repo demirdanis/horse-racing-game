@@ -7,12 +7,7 @@
     </div>
 
     <div ref="trackEl" class="track" :style="trackStyle">
-      <div
-        ref="runnerEl"
-        class="runner"
-        :class="runnerClass"
-        :style="runnerStyle"
-      >
+      <div ref="runnerEl" class="runner" :class="runnerClass" :style="runnerStyle">
         <slot :progress="progress" />
       </div>
     </div>
@@ -20,8 +15,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from "vue";
 import type { TrackProps } from "./Track.types";
+import { RACE_SPEED_MULTIPLIER } from "@/store/modules/race/race.constants";
 
 const props = withDefaults(defineProps<TrackProps>(), {
   state: "ready",
@@ -81,7 +77,7 @@ const trackStyle = computed(() => ({
 }));
 
 const runnerStyle = computed(() => {
-  const style: any = {};
+  const style: CSSProperties = {};
 
   if (distancePx.value > 0) {
     const translateDistance = distancePx.value * progress.value;
@@ -128,7 +124,7 @@ function startProgressLoop() {
     if (!isRunning.value) return;
     if (startTs == null) startTs = ts;
 
-    const elapsed = (ts - startTs) / 1000;
+    const elapsed = ((ts - startTs) / 1000) * RACE_SPEED_MULTIPLIER;
     const dur = Math.max(0.1, props.durationSec);
 
     progress.value = clamp(pausedProgress + elapsed / dur, 0, 1);

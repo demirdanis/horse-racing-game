@@ -1,7 +1,14 @@
+import type { AppHeaderProps, AppRunState } from "./AppHeader.types";
 import { ref, watch } from "vue";
 
 import AppHeader from "./AppHeader.vue";
 import { fn } from "storybook/test";
+
+type StoryArgs = AppHeaderProps & {
+  onGenerate?: () => void;
+  onStart?: () => void;
+  onPause?: () => void;
+};
 
 export default {
   title: "Organisms/AppHeader",
@@ -28,14 +35,14 @@ export default {
     onStart: fn(),
     onPause: fn(),
   },
-  render: (args: any) => ({
+  render: (args: StoryArgs) => ({
     components: { AppHeader },
     setup() {
-      const state = ref(args.state);
+      const state = ref<AppRunState>(args.state ?? "ready");
 
       watch(
         () => args.state,
-        (v) => (state.value = v),
+        (v) => (state.value = v ?? "ready"),
         { immediate: true }
       );
 

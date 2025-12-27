@@ -5,13 +5,15 @@ import type { TableColumn } from "./Table.types";
 import { h } from "vue";
 import { mount } from "@vue/test-utils";
 
-function styleOf(el: any) {
+type StylableEl = { attributes: (name: string) => string | undefined };
+
+function styleOf(el: StylableEl) {
   return (el.attributes("style") ?? "").replace(/\s+/g, " ").trim();
 }
 
 function mountTable(opts?: {
   columns?: TableColumn[];
-  rows?: Record<string, any>[];
+  rows?: Record<string, unknown>[];
   borderStyle?: "full" | "inner" | "outer";
   withCellSlot?: boolean;
 }) {
@@ -33,12 +35,8 @@ function mountTable(opts?: {
     },
     slots: opts?.withCellSlot
       ? {
-          cell: (slotProps: any) =>
-            h(
-              "span",
-              { "data-test": `cell-${slotProps.col.key}` },
-              `V:${String(slotProps.value)}`
-            ),
+          cell: (slotProps: { row: Record<string, unknown>; col: TableColumn; value: unknown }) =>
+            h("span", { "data-test": `cell-${slotProps.col.key}` }, `V:${String(slotProps.value)}`),
         }
       : undefined,
   });
@@ -150,7 +148,7 @@ describe("Table", () => {
       columns: [
         { key: "a", title: "A" },
         { key: "b", title: "B", width: undefined },
-        { key: "c", title: "C", width: null as any },
+        { key: "c", title: "C", width: null },
       ],
       rows: [{ a: 1, b: 2, c: 3 }],
     });

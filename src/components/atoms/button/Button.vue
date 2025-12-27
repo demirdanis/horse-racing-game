@@ -1,10 +1,5 @@
 <template>
-  <button
-    class="btn"
-    :class="variant"
-    :disabled="disabled"
-    @click="handleClick"
-  >
+  <button class="btn" :class="variant" :disabled="disabled" @click="handleClick">
     <slot />
   </button>
 </template>
@@ -34,7 +29,9 @@ function handleClick() {
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
 }
 
 .primary {

@@ -34,7 +34,5 @@ const props = withDefaults(defineProps<Props>(), {
   size: 24,
 });
 
-const sizeAttr = computed(() =>
-  typeof props.size === "number" ? `${props.size}px` : props.size
-);
+const sizeAttr = computed(() => (typeof props.size === "number" ? `${props.size}px` : props.size));
 </script>
