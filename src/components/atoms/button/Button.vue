@@ -31,7 +31,6 @@ function handleClick() {
 <style scoped>
 .btn {
   padding: 10px 16px;
-  border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
