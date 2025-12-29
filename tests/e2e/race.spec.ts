@@ -30,7 +30,7 @@ test.describe("Horse Racing Game - Race Page", () => {
   test("should load the race page successfully", async ({ page }) => {
     await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveTitle(/horse-racing-game/i);
+    await expect(page).toHaveTitle(/horse\s*racing\s*game/i);
 
     const appRoot = page.locator("#app");
     await expect(appRoot).toBeVisible();
